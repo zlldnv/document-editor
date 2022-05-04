@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { convertToRaw, EditorState, convertFromRaw } from "draft-js";
+
+import { firestore as db } from "./firebase";
+
 import Rich from "./rich";
 
 import "./rich.css";
@@ -20,20 +23,10 @@ function App() {
 
   const sendData = (id) => {
     const data = editorValue.getCurrentContent();
-    axios
-      .post(
-        "http://gitlab.vitaliismolev.com/content",
-        JSON.stringify({
-          id,
-          content: convertToRaw(data),
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      )
-      .catch((err) => console.log(err));
+
+    db.collection("docs")
+      .doc(id)
+      .set({ content: convertToRaw(data) });
   };
 
   const generateID = () => {
@@ -49,17 +42,12 @@ function App() {
     }
   }, [docId]);
 
-  const getDocBody = (id) => {
-    fetch(`http://gitlab.vitaliismolev.com/content?id=${id}`)
-      .catch((err) => console.log(err))
-      .then((response) => response.json())
-      .then((res) => {
-        console.log(res);
-        const contentState = convertFromRaw(res.content);
-        const editorState = EditorState.createWithContent(contentState);
-        console.log(contentState);
-        setEditorValue(editorState);
-      });
+  const getDocBody = async (id) => {
+    const snap = await db.collection("docs").doc(id).get();
+
+    const contentState = convertFromRaw(snap.data().content);
+    const editorState = EditorState.createWithContent(contentState);
+    setEditorValue(editorState);
   };
 
   const sendIdForDoc = () => {
