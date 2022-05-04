@@ -1,26 +1,37 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import Draft from "draft-js";
 
 import { BlockStyleControls } from "./BlockStyleControls";
 import { InlineStyleControls } from "./InlineControls";
 
+import _ from "lodash";
 import "./rich.css";
 
-const { Editor, EditorState, RichUtils, getDefaultKeyBinding } = Draft;
+const { Editor, RichUtils, getDefaultKeyBinding } = Draft;
 
-const RichEditorExample = () => {
-  const [editorValue, setEditorValue] = useState(EditorState.createEmpty());
-
-  console.log(editorValue);
-
+const RichEditorExample = ({
+  editorValue,
+  setEditorValue,
+  sendData,
+  docId,
+}) => {
   const myBlock = useRef(null);
 
   const focus = () => {
     myBlock.focus();
   };
 
+  const sentMyThing = () => {
+    if (docId) {
+      sendData(docId);
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const delayedFunc = useCallback(_.debounce(sentMyThing, 1000), [sentMyThing]);
   const onChange = (editorState) => {
     setEditorValue(editorState);
+    delayedFunc();
   };
 
   const handleKeyCommand = (command, editorState) => {
