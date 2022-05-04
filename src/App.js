@@ -38,7 +38,7 @@ function App() {
 
   useEffect(() => {
     if (docId) {
-      setTimeout(getDocBody(docId), 5000);
+      setInterval(getDocBody(docId), 5000);
     }
   }, [docId]);
 
